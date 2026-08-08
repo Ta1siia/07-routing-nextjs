@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
 import { fetchNotes } from "@/lib/api";
@@ -16,12 +16,10 @@ function NotesClient({ tag }: { tag?: NoteTag }) {
   const [page, setPage] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [prevTag, setPrevTag] = useState(tag);
 
-  if (tag !== prevTag) {
-    setPrevTag(tag);
+  useEffect(() => {
     setPage(1);
-  }
+  }, [tag]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["notes", { search: debouncedSearch, page, tag }],
