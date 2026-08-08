@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
-import { fetchNotes, PER_PAGE } from "@/lib/api";
+import { fetchNotes } from "@/lib/api";
+import type { NoteTag } from "@/types/note";
 import NoteList from "@/components/NoteList/NoteList";
 import Pagination from "@/components/Pagination/Pagination";
 import SearchBox from "@/components/SearchBox/SearchBox";
@@ -11,19 +12,25 @@ import Modal from "@/components/Modal/Modal";
 import NoteForm from "@/components/NoteForm/NoteForm";
 import css from "./Notes.module.css";
 
-function NotesClient() {
+function NotesClient({ tag }: { tag?: NoteTag }) {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [prevTag, setPrevTag] = useState(tag);
+
+  if (tag !== prevTag) {
+    setPrevTag(tag);
+    setPage(1);
+  }
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["notes", page, search],
-    queryFn: () => fetchNotes(page, PER_PAGE, search),
+    queryKey: ["notes", { search: debouncedSearch, page, tag }],
+    queryFn: () => fetchNotes(page, debouncedSearch, tag),
     placeholderData: keepPreviousData,
   });
 
   const handleSearchChange = useDebouncedCallback((value: string) => {
-    setSearch(value);
+    setDebouncedSearch(value);
     setPage(1);
   }, 400);
 
